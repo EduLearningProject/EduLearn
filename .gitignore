@@ -1,0 +1,37 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.DotSettings.user
+
+# NuGet
+packages/
+*.nupkg
+
+# SQL Server
+*.dbmdl
+*.jfm
+*.mdf
+*.ldf
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Claude Code
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.claudeignore
+*.claude.*
+.mcp.json
+.interface-design/
+.claude-memory/
+.planning/

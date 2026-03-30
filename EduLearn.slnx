@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="EduLearn.AnalyticsService/EduLearn.AnalyticsService.csproj" />
+  <Project Path="EduLearn.AuthService/EduLearn.AuthService.csproj" />
+  <Project Path="EduLearn.LMSService/EduLearn.LMSService.csproj" />
+  <Project Path="EduLearn.NotificationService/EduLearn.NotificationService.csproj" />
+  <Project Path="EduLearn.Shared/EduLearn.Shared.csproj" />
+  <Project Path="EduLearn.SISService/EduLearn.SISService.csproj" />
+  <Project Path="EduLearn.Tests/EduLearn.Tests.csproj" />
+</Solution>
