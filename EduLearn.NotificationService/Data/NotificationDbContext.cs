@@ -26,9 +26,6 @@ public class NotificationDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.Ignore(u => u.FacultyCourses);
             entity.Ignore(u => u.Enrollments);
             entity.Ignore(u => u.Submissions);
@@ -38,8 +35,6 @@ public class NotificationDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.Property(e => e.IsRead).HasDefaultValue(false);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(n => n.User).WithMany(u => u.Notifications).HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.NoAction);
         });
     }

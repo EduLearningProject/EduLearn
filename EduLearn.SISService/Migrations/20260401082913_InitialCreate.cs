@@ -52,7 +52,7 @@ namespace EduLearn.SISService.Migrations
                     StudentId = table.Column<int>(type: "int", nullable: false),
                     CourseId = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    EnrolledAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    EnrolledAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Grade = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: true),
                     GradePoint = table.Column<decimal>(type: "decimal(3,1)", nullable: true),
                     CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)

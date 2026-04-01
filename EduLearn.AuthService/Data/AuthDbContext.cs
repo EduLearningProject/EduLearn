@@ -15,10 +15,6 @@ public class AuthDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-
             entity.Ignore(u => u.FacultyCourses);
             entity.Ignore(u => u.Enrollments);
             entity.Ignore(u => u.Submissions);

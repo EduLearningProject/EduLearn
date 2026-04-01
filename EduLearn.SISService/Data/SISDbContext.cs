@@ -26,9 +26,6 @@ public class SISDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.Ignore(u => u.FacultyCourses);
             entity.Ignore(u => u.Submissions);
             entity.Ignore(u => u.Notifications);
@@ -38,9 +35,6 @@ public class SISDbContext : DbContext
         modelBuilder.Entity<Course>(entity =>
         {
             entity.ToTable("Courses", t => t.ExcludeFromMigrations());
-            entity.Property(e => e.MaxCapacity).HasDefaultValue(30);
-            entity.Property(e => e.IsPublished).HasDefaultValue(false);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(c => c.Faculty).WithMany().HasForeignKey(c => c.FacultyId).OnDelete(DeleteBehavior.NoAction);
             entity.Ignore(c => c.Materials);
             entity.Ignore(c => c.Assessments);
@@ -49,7 +43,6 @@ public class SISDbContext : DbContext
 
         modelBuilder.Entity<Enrollment>(entity =>
         {
-            entity.Property(e => e.EnrolledAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(e => e.Student).WithMany(u => u.Enrollments).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.NoAction);
             entity.HasOne(e => e.Course).WithMany(c => c.Enrollments).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.NoAction);
         });

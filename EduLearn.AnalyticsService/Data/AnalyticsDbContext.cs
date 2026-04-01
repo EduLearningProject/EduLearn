@@ -27,9 +27,6 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.Ignore(u => u.FacultyCourses);
             entity.Ignore(u => u.Notifications);
             entity.Ignore(u => u.ForumPosts);
@@ -38,9 +35,6 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Course>(entity =>
         {
             entity.ToTable("Courses", t => t.ExcludeFromMigrations());
-            entity.Property(e => e.MaxCapacity).HasDefaultValue(30);
-            entity.Property(e => e.IsPublished).HasDefaultValue(false);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(c => c.Faculty).WithMany().HasForeignKey(c => c.FacultyId).OnDelete(DeleteBehavior.NoAction);
             entity.Ignore(c => c.Materials);
             entity.Ignore(c => c.ForumPosts);
@@ -49,7 +43,6 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Enrollment>(entity =>
         {
             entity.ToTable("Enrollments", t => t.ExcludeFromMigrations());
-            entity.Property(e => e.EnrolledAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(e => e.Student).WithMany(u => u.Enrollments).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.NoAction);
             entity.HasOne(e => e.Course).WithMany(c => c.Enrollments).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.NoAction);
         });
@@ -57,16 +50,12 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Assessment>(entity =>
         {
             entity.ToTable("Assessments", t => t.ExcludeFromMigrations());
-            entity.Property(e => e.IsPublished).HasDefaultValue(false);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(a => a.Course).WithMany(c => c.Assessments).HasForeignKey(a => a.CourseId).OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<AssessmentSubmission>(entity =>
         {
             entity.ToTable("AssessmentSubmissions", t => t.ExcludeFromMigrations());
-            entity.Property(e => e.IsGraded).HasDefaultValue(false);
-            entity.Property(e => e.SubmittedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(s => s.Assessment).WithMany(a => a.Submissions).HasForeignKey(s => s.AssessmentId).OnDelete(DeleteBehavior.NoAction);
             entity.HasOne(s => s.Student).WithMany(u => u.Submissions).HasForeignKey(s => s.StudentId).OnDelete(DeleteBehavior.NoAction);
         });

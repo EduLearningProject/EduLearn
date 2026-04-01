@@ -21,9 +21,9 @@ namespace EduLearn.LMSService.Migrations
                     Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     FacultyId = table.Column<int>(type: "int", nullable: false),
                     Semester = table.Column<int>(type: "int", nullable: false),
-                    MaxCapacity = table.Column<int>(type: "int", nullable: false, defaultValue: 30),
-                    IsPublished = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    MaxCapacity = table.Column<int>(type: "int", nullable: false),
+                    IsPublished = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -47,8 +47,8 @@ namespace EduLearn.LMSService.Migrations
                     Questions = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MaxMarks = table.Column<decimal>(type: "decimal(5,1)", nullable: false),
                     DueDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsPublished = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    IsPublished = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -70,9 +70,9 @@ namespace EduLearn.LMSService.Migrations
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     FileUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     FileType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ModuleNumber = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
-                    OrderIndex = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
-                    UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    ModuleNumber = table.Column<int>(type: "int", nullable: false),
+                    OrderIndex = table.Column<int>(type: "int", nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -95,7 +95,7 @@ namespace EduLearn.LMSService.Migrations
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     Content = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -128,9 +128,9 @@ namespace EduLearn.LMSService.Migrations
                     Answers = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Score = table.Column<decimal>(type: "decimal(5,1)", nullable: true),
                     MaxScore = table.Column<decimal>(type: "decimal(5,1)", nullable: true),
-                    IsGraded = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    IsGraded = table.Column<bool>(type: "bit", nullable: false),
                     Feedback = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    SubmittedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    SubmittedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     GradedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
