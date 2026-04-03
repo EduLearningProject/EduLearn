@@ -28,6 +28,7 @@
     <ProjectReference Include="..\EduLearn.AuthService\EduLearn.AuthService.csproj" />
     <ProjectReference Include="..\EduLearn.SISService\EduLearn.SISService.csproj" />
     <ProjectReference Include="..\EduLearn.LMSService\EduLearn.LMSService.csproj" />
+    <ProjectReference Include="..\EduLearn.FinanceService\EduLearn.FinanceService.csproj" />
     <ProjectReference Include="..\EduLearn.AnalyticsService\EduLearn.AnalyticsService.csproj" />
     <ProjectReference Include="..\EduLearn.NotificationService\EduLearn.NotificationService.csproj" />
   </ItemGroup>

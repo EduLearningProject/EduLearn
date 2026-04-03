@@ -8,28 +8,34 @@ public class Notification
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+    public int NotificationID { get; set; }
 
     [Required]
-    public int UserId { get; set; }
+    public int UserID { get; set; }
 
-    [Required]
-    [MaxLength(200)]
-    public string Title { get; set; } = null!;
+    public int? EntityID { get; set; }
 
     [Required]
     [MaxLength(1000)]
     public string Message { get; set; } = null!;
 
     [Required]
-    [MaxLength(50)]
-    public string Type { get; set; } = null!;
+    [MaxLength(30)]
+    public string Category { get; set; } = null!;
 
-    public bool IsRead { get; set; } = false;
+    [Required]
+    [MaxLength(10)]
+    public string Severity { get; set; } = "Info";
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public DateTime? ReadAt { get; set; }
+
+    [Required]
+    [MaxLength(20)]
+    public string Status { get; set; } = "Active";
+
     // Navigation properties
-    [ForeignKey(nameof(UserId))]
+    [ForeignKey(nameof(UserID))]
     public User User { get; set; } = null!;
 }

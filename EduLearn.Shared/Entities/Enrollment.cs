@@ -8,32 +8,28 @@ public class Enrollment
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+    public int EnrollID { get; set; }
 
     [Required]
-    public int StudentId { get; set; }
+    public int StudentID { get; set; }
 
     [Required]
-    public int CourseId { get; set; }
-
-    [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = null!;
+    public int SectionID { get; set; }
 
     public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
 
-    [MaxLength(2)]
-    public string? Grade { get; set; }
+    [Required]
+    [MaxLength(20)]
+    public string Status { get; set; } = "Enrolled";
 
-    [Column(TypeName = "decimal(3,1)")]
-    public decimal? GradePoint { get; set; }
+    public int? WaitlistPosition { get; set; }
 
-    public DateTime? CompletedAt { get; set; }
+    public bool GradePostedFlag { get; set; } = false;
 
     // Navigation properties
-    [ForeignKey(nameof(StudentId))]
-    public User Student { get; set; } = null!;
+    [ForeignKey(nameof(StudentID))]
+    public Student Student { get; set; } = null!;
 
-    [ForeignKey(nameof(CourseId))]
-    public Course Course { get; set; } = null!;
+    [ForeignKey(nameof(SectionID))]
+    public Section Section { get; set; } = null!;
 }

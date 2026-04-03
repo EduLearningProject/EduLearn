@@ -23,21 +23,24 @@ public class UsersController : ControllerBase
         if (await _context.Users.AnyAsync(u => u.Email == dto.Email, cancellationToken))
             return Conflict(new { error = "Email already exists", code = "DUPLICATE_EMAIL" });
 
+        if (await _context.Users.AnyAsync(u => u.Username == dto.Username, cancellationToken))
+            return Conflict(new { error = "Username already exists", code = "DUPLICATE_USERNAME" });
+
         var user = new User
         {
+            Username = dto.Username,
+            FullName = dto.FullName,
             Email = dto.Email,
-            PasswordHash = dto.Password, // Plain text for now — BCrypt later
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
+            Phone = dto.Phone,
             Role = dto.Role,
-            Department = dto.Department
+            PasswordHash = dto.Password // Plain text for now — BCrypt later
         };
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync(cancellationToken);
 
         var response = MapToDto(user);
-        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, response);
+        return CreatedAtAction(nameof(GetUser), new { id = user.UserID }, response);
     }
 
     [HttpGet]
@@ -47,14 +50,16 @@ public class UsersController : ControllerBase
             .AsNoTracking()
             .Select(u => new UserResponseDto
             {
-                Id = u.Id,
+                UserID = u.UserID,
+                Username = u.Username,
+                FullName = u.FullName,
                 Email = u.Email,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
+                Phone = u.Phone,
                 Role = u.Role,
-                Department = u.Department,
-                IsActive = u.IsActive,
-                CreatedAt = u.CreatedAt
+                MFAEnabled = u.MFAEnabled,
+                Status = u.Status,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt
             })
             .ToListAsync(cancellationToken);
 
@@ -66,7 +71,7 @@ public class UsersController : ControllerBase
     {
         var user = await _context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(u => u.UserID == id, cancellationToken);
 
         if (user is null)
             return NotFound(new { error = "User not found", code = "USER_NOT_FOUND" });
@@ -74,15 +79,49 @@ public class UsersController : ControllerBase
         return Ok(MapToDto(user));
     }
 
+    [HttpPut("{id}")]
+    public async Task<ActionResult<UserResponseDto>> UpdateUser(int id, UpdateUserDto dto, CancellationToken cancellationToken)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == id, cancellationToken);
+
+        if (user is null)
+            return NotFound(new { error = "User not found", code = "USER_NOT_FOUND" });
+
+        user.FullName = dto.FullName;
+        user.Email = dto.Email;
+        user.Phone = dto.Phone;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok(MapToDto(user));
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<ActionResult<UserResponseDto>> UpdateUserStatus(int id, UpdateStatusDto dto, CancellationToken cancellationToken)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == id, cancellationToken);
+
+        if (user is null)
+            return NotFound(new { error = "User not found", code = "USER_NOT_FOUND" });
+
+        user.Status = dto.Status;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok(MapToDto(user));
+    }
+
     private static UserResponseDto MapToDto(User user) => new()
     {
-        Id = user.Id,
+        UserID = user.UserID,
+        Username = user.Username,
+        FullName = user.FullName,
         Email = user.Email,
-        FirstName = user.FirstName,
-        LastName = user.LastName,
+        Phone = user.Phone,
         Role = user.Role,
-        Department = user.Department,
-        IsActive = user.IsActive,
-        CreatedAt = user.CreatedAt
+        MFAEnabled = user.MFAEnabled,
+        Status = user.Status,
+        CreatedAt = user.CreatedAt,
+        UpdatedAt = user.UpdatedAt
     };
 }

@@ -8,10 +8,12 @@ public class Assessment
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+    public int AssessmentID { get; set; }
 
     [Required]
-    public int CourseId { get; set; }
+    public int CourseID { get; set; }
+
+    public int? SectionID { get; set; }
 
     [Required]
     [MaxLength(200)]
@@ -21,21 +23,32 @@ public class Assessment
     [MaxLength(20)]
     public string Type { get; set; } = null!;
 
-    public string? Questions { get; set; }
+    public DateTime? DueAt { get; set; }
 
     [Required]
     [Column(TypeName = "decimal(5,1)")]
-    public decimal MaxMarks { get; set; }
+    public decimal MaxScore { get; set; }
 
-    public DateTime? DueDate { get; set; }
+    public string? GradingRubricJSON { get; set; }
 
-    public bool IsPublished { get; set; } = false;
+    [Required]
+    public int CreatedByFK { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [Required]
+    [MaxLength(20)]
+    public string Status { get; set; } = "Draft";
+
     // Navigation properties
-    [ForeignKey(nameof(CourseId))]
+    [ForeignKey(nameof(CourseID))]
     public Course Course { get; set; } = null!;
 
-    public ICollection<AssessmentSubmission> Submissions { get; set; } = new List<AssessmentSubmission>();
+    [ForeignKey(nameof(SectionID))]
+    public Section? Section { get; set; }
+
+    [ForeignKey(nameof(CreatedByFK))]
+    public User CreatedBy { get; set; } = null!;
+
+    public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
 }

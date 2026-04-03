@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EduLearn.SISService.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/enrollment")]
 public class EnrollmentsController : ControllerBase
 {
     private readonly SISDbContext _context;
@@ -17,69 +17,193 @@ public class EnrollmentsController : ControllerBase
         _context = context;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<EnrollmentResponseDto>> CreateEnrollment(CreateEnrollmentDto dto, CancellationToken cancellationToken)
+    [HttpPost("enroll")]
+    public async Task<ActionResult<EnrollmentResponseDto>> Enroll(CreateEnrollmentDto dto, CancellationToken cancellationToken)
     {
-        var student = await _context.Users
+        // ── Validation (read-only, outside transaction) ──
+        var student = await _context.Students
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == dto.StudentId && u.Role == "Student", cancellationToken);
+            .FirstOrDefaultAsync(s => s.StudentID == dto.StudentID, cancellationToken);
 
         if (student is null)
-            return BadRequest(new { error = "Invalid StudentId or user is not Student role", code = "INVALID_STUDENT" });
+            return BadRequest(new { error = "Student not found", code = "STUDENT_NOT_FOUND" });
 
-        var course = await _context.Courses
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == dto.CourseId, cancellationToken);
-
-        if (course is null)
-            return BadRequest(new { error = "Course not found", code = "COURSE_NOT_FOUND" });
-
-        if (await _context.Enrollments.AnyAsync(e => e.StudentId == dto.StudentId && e.CourseId == dto.CourseId, cancellationToken))
-            return Conflict(new { error = "Student is already enrolled in this course", code = "DUPLICATE_ENROLLMENT" });
-
-        var enrollment = new Enrollment
+        // ── Transaction-wrapped enrollment (PRD Section 10.1) ──
+        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            StudentId = dto.StudentId,
-            CourseId = dto.CourseId,
-            Status = "Active"
-        };
+            // Re-read section WITH tracking inside transaction for fresh EnrolledCount
+            var section = await _context.Sections
+                .Include(s => s.Course)
+                .FirstOrDefaultAsync(s => s.SectionID == dto.SectionID, cancellationToken);
 
-        _context.Enrollments.Add(enrollment);
-        await _context.SaveChangesAsync(cancellationToken);
+            if (section is null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return BadRequest(new { error = "Section not found", code = "SECTION_NOT_FOUND" });
+            }
 
-        var response = new EnrollmentResponseDto
+            // Duplicate check inside transaction to prevent race conditions
+            if (await _context.Enrollments.AnyAsync(
+                e => e.StudentID == dto.StudentID && e.SectionID == dto.SectionID && e.Status != "Dropped", cancellationToken))
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Conflict(new { error = "Student is already enrolled in this section", code = "DUPLICATE_ENROLLMENT" });
+            }
+
+            var status = "Enrolled";
+            int? waitlistPosition = null;
+
+            // Check capacity on fresh section data
+            if (section.EnrolledCount >= section.Capacity)
+            {
+                status = "Waitlisted";
+                var maxPosition = await _context.Enrollments
+                    .Where(e => e.SectionID == dto.SectionID && e.Status == "Waitlisted")
+                    .MaxAsync(e => (int?)e.WaitlistPosition, cancellationToken) ?? 0;
+                waitlistPosition = maxPosition + 1;
+            }
+
+            var enrollment = new Enrollment
+            {
+                StudentID = dto.StudentID,
+                SectionID = dto.SectionID,
+                Status = status,
+                WaitlistPosition = waitlistPosition
+            };
+
+            _context.Enrollments.Add(enrollment);
+
+            // Update enrolled count if not waitlisted
+            if (status == "Enrolled")
+            {
+                section.EnrolledCount++;
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            var response = new EnrollmentResponseDto
+            {
+                EnrollID = enrollment.EnrollID,
+                StudentID = enrollment.StudentID,
+                StudentName = student.Name,
+                SectionID = enrollment.SectionID,
+                CourseName = section.Course.Title,
+                Term = section.Term,
+                Status = enrollment.Status,
+                WaitlistPosition = enrollment.WaitlistPosition,
+                GradePostedFlag = enrollment.GradePostedFlag,
+                EnrolledAt = enrollment.EnrolledAt
+            };
+
+            return StatusCode(StatusCodes.Status201Created, response);
+        }
+        catch
         {
-            Id = enrollment.Id,
-            StudentId = enrollment.StudentId,
-            StudentName = $"{student.FirstName} {student.LastName}",
-            CourseId = enrollment.CourseId,
-            CourseName = course.Title,
-            Status = enrollment.Status,
-            EnrolledAt = enrollment.EnrolledAt
-        };
-
-        return StatusCode(StatusCodes.Status201Created, response);
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
-    [HttpGet]
-    public async Task<ActionResult<List<EnrollmentResponseDto>>> GetEnrollments(CancellationToken cancellationToken)
+    [HttpDelete("{id}/drop")]
+    public async Task<IActionResult> Drop(int id, CancellationToken cancellationToken)
+    {
+        // ── Transaction-wrapped drop with auto-promote (PRD Section 10.1) ──
+        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var enrollment = await _context.Enrollments
+                .FirstOrDefaultAsync(e => e.EnrollID == id, cancellationToken);
+
+            if (enrollment is null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return NotFound(new { error = "Enrollment not found", code = "ENROLLMENT_NOT_FOUND" });
+            }
+
+            var wasEnrolled = enrollment.Status == "Enrolled";
+            enrollment.Status = "Dropped";
+
+            // If the student was enrolled (not waitlisted), decrement count and auto-promote
+            if (wasEnrolled)
+            {
+                var section = await _context.Sections.FirstAsync(s => s.SectionID == enrollment.SectionID, cancellationToken);
+                section.EnrolledCount--;
+
+                // Auto-promote first waitlisted student
+                var nextInLine = await _context.Enrollments
+                    .Where(e => e.SectionID == enrollment.SectionID && e.Status == "Waitlisted")
+                    .OrderBy(e => e.WaitlistPosition)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (nextInLine is not null)
+                {
+                    nextInLine.Status = "Enrolled";
+                    nextInLine.WaitlistPosition = null;
+                    section.EnrolledCount++;
+                }
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return NoContent();
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    [HttpGet("student/{studentId}")]
+    public async Task<ActionResult<List<EnrollmentResponseDto>>> GetByStudent(int studentId, CancellationToken cancellationToken)
     {
         var enrollments = await _context.Enrollments
             .AsNoTracking()
+            .Where(e => e.StudentID == studentId)
             .Include(e => e.Student)
-            .Include(e => e.Course)
+            .Include(e => e.Section)
+                .ThenInclude(s => s.Course)
             .Select(e => new EnrollmentResponseDto
             {
-                Id = e.Id,
-                StudentId = e.StudentId,
-                StudentName = e.Student.FirstName + " " + e.Student.LastName,
-                CourseId = e.CourseId,
-                CourseName = e.Course.Title,
+                EnrollID = e.EnrollID,
+                StudentID = e.StudentID,
+                StudentName = e.Student.Name,
+                SectionID = e.SectionID,
+                CourseName = e.Section.Course.Title,
+                Term = e.Section.Term,
                 Status = e.Status,
-                EnrolledAt = e.EnrolledAt,
-                Grade = e.Grade,
-                GradePoint = e.GradePoint,
-                CompletedAt = e.CompletedAt
+                WaitlistPosition = e.WaitlistPosition,
+                GradePostedFlag = e.GradePostedFlag,
+                EnrolledAt = e.EnrolledAt
+            })
+            .ToListAsync(cancellationToken);
+
+        return Ok(enrollments);
+    }
+
+    [HttpGet("section/{sectionId}")]
+    public async Task<ActionResult<List<EnrollmentResponseDto>>> GetBySection(int sectionId, CancellationToken cancellationToken)
+    {
+        var enrollments = await _context.Enrollments
+            .AsNoTracking()
+            .Where(e => e.SectionID == sectionId)
+            .Include(e => e.Student)
+            .Include(e => e.Section)
+                .ThenInclude(s => s.Course)
+            .Select(e => new EnrollmentResponseDto
+            {
+                EnrollID = e.EnrollID,
+                StudentID = e.StudentID,
+                StudentName = e.Student.Name,
+                SectionID = e.SectionID,
+                CourseName = e.Section.Course.Title,
+                Term = e.Section.Term,
+                Status = e.Status,
+                WaitlistPosition = e.WaitlistPosition,
+                GradePostedFlag = e.GradePostedFlag,
+                EnrolledAt = e.EnrolledAt
             })
             .ToListAsync(cancellationToken);
 

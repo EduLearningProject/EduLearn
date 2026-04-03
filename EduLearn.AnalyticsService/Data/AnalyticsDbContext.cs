@@ -7,65 +7,165 @@ public class AnalyticsDbContext : DbContext
 {
     public AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : base(options) { }
 
-    public DbSet<Enrollment> Enrollments => Set<Enrollment>();
-    public DbSet<AssessmentSubmission> AssessmentSubmissions => Set<AssessmentSubmission>();
-    public DbSet<Attendance> Attendance => Set<Attendance>();
-    public DbSet<Course> Courses => Set<Course>();
-    public DbSet<Assessment> Assessments => Set<Assessment>();
+    // ── Owned tables (write) ──
+    public DbSet<Report> Reports => Set<Report>();
+    public DbSet<KPI> KPIs => Set<KPI>();
+    public DbSet<AuditPackage> AuditPackages => Set<AuditPackage>();
+
+    // ── Referenced tables (read-only for reporting queries) ──
     public DbSet<User> Users => Set<User>();
+    public DbSet<Student> Students => Set<Student>();
+    public DbSet<Course> Courses => Set<Course>();
+    public DbSet<EduLearn.Shared.Entities.Program> Programs => Set<EduLearn.Shared.Entities.Program>();
+    public DbSet<Section> Sections => Set<Section>();
+    public DbSet<Enrollment> Enrollments => Set<Enrollment>();
+    public DbSet<Assessment> Assessments => Set<Assessment>();
+    public DbSet<Submission> Submissions => Set<Submission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Exclude entities not in this context at all
-        modelBuilder.Ignore<CourseMaterial>();
+        // ── Ignore entities not in this context ──
+        modelBuilder.Ignore<AuditLog>();
+        modelBuilder.Ignore<Applicant>();
+        modelBuilder.Ignore<Transcript>();
+        modelBuilder.Ignore<Room>();
+        modelBuilder.Ignore<Syllabus>();
+        modelBuilder.Ignore<Content>();
+        modelBuilder.Ignore<Discussion>();
+        modelBuilder.Ignore<GradeChange>();
+        modelBuilder.Ignore<FeeSchedule>();
+        modelBuilder.Ignore<Invoice>();
+        modelBuilder.Ignore<Payment>();
+        modelBuilder.Ignore<Scholarship>();
         modelBuilder.Ignore<Notification>();
-        modelBuilder.Ignore<ForumPost>();
+        modelBuilder.Ignore<Ticket>();
 
-        // READ-ONLY context — all tables excluded from migrations (owned by other services)
+        // ── All referenced tables use ExcludeFromMigrations ──
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
-            entity.Ignore(u => u.FacultyCourses);
+            entity.Ignore(u => u.AuditLogs);
             entity.Ignore(u => u.Notifications);
-            entity.Ignore(u => u.ForumPosts);
+        });
+
+        modelBuilder.Entity<Student>(entity =>
+        {
+            entity.ToTable("Students", t => t.ExcludeFromMigrations());
+            entity.Ignore(s => s.Transcripts);
+            entity.Ignore(s => s.Invoices);
+            entity.Ignore(s => s.Scholarships);
+
+            entity.HasOne(s => s.User)
+                  .WithOne(u => u.Student)
+                  .HasForeignKey<Student>(s => s.UserID)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(s => s.Program)
+                  .WithMany(p => p.Students)
+                  .HasForeignKey(s => s.ProgramID)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Course>(entity =>
         {
             entity.ToTable("Courses", t => t.ExcludeFromMigrations());
-            entity.HasOne(c => c.Faculty).WithMany().HasForeignKey(c => c.FacultyId).OnDelete(DeleteBehavior.NoAction);
-            entity.Ignore(c => c.Materials);
-            entity.Ignore(c => c.ForumPosts);
+            entity.Ignore(c => c.Contents);
+            entity.Ignore(c => c.Discussions);
+            entity.Ignore(c => c.Syllabi);
+        });
+
+        modelBuilder.Entity<EduLearn.Shared.Entities.Program>(entity =>
+        {
+            entity.ToTable("Programs", t => t.ExcludeFromMigrations());
+            entity.Ignore(p => p.FeeSchedules);
+        });
+
+        modelBuilder.Entity<Section>(entity =>
+        {
+            entity.ToTable("Sections", t => t.ExcludeFromMigrations());
+            entity.Ignore(sec => sec.Room);
+
+            entity.HasOne(sec => sec.Course)
+                  .WithMany(c => c.Sections)
+                  .HasForeignKey(sec => sec.CourseID)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(sec => sec.Instructor)
+                  .WithMany(u => u.InstructorSections)
+                  .HasForeignKey(sec => sec.InstructorID)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Enrollment>(entity =>
         {
             entity.ToTable("Enrollments", t => t.ExcludeFromMigrations());
-            entity.HasOne(e => e.Student).WithMany(u => u.Enrollments).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.NoAction);
-            entity.HasOne(e => e.Course).WithMany(c => c.Enrollments).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.Student)
+                  .WithMany(s => s.Enrollments)
+                  .HasForeignKey(e => e.StudentID)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.Section)
+                  .WithMany(sec => sec.Enrollments)
+                  .HasForeignKey(e => e.SectionID)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Assessment>(entity =>
         {
             entity.ToTable("Assessments", t => t.ExcludeFromMigrations());
-            entity.HasOne(a => a.Course).WithMany(c => c.Assessments).HasForeignKey(a => a.CourseId).OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.Course)
+                  .WithMany(c => c.Assessments)
+                  .HasForeignKey(a => a.CourseID)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.Section)
+                  .WithMany(sec => sec.Assessments)
+                  .HasForeignKey(a => a.SectionID)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.CreatedBy)
+                  .WithMany()
+                  .HasForeignKey(a => a.CreatedByFK)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
 
-        modelBuilder.Entity<AssessmentSubmission>(entity =>
+        modelBuilder.Entity<Submission>(entity =>
         {
-            entity.ToTable("AssessmentSubmissions", t => t.ExcludeFromMigrations());
-            entity.HasOne(s => s.Assessment).WithMany(a => a.Submissions).HasForeignKey(s => s.AssessmentId).OnDelete(DeleteBehavior.NoAction);
-            entity.HasOne(s => s.Student).WithMany(u => u.Submissions).HasForeignKey(s => s.StudentId).OnDelete(DeleteBehavior.NoAction);
+            entity.ToTable("Submissions", t => t.ExcludeFromMigrations());
+            entity.Ignore(s => s.GradeChanges);
+
+            entity.HasOne(s => s.Assessment)
+                  .WithMany(a => a.Submissions)
+                  .HasForeignKey(s => s.AssessmentID)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(s => s.Student)
+                  .WithMany(st => st.Submissions)
+                  .HasForeignKey(s => s.StudentID)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(s => s.Grader)
+                  .WithMany()
+                  .HasForeignKey(s => s.GraderID)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
 
-        modelBuilder.Entity<Attendance>(entity =>
+        // ── Owned tables ──
+
+        modelBuilder.Entity<Report>(entity =>
         {
-            entity.ToTable("Attendance", t => t.ExcludeFromMigrations());
-            entity.HasOne(a => a.Student).WithMany(u => u.AttendanceRecords).HasForeignKey(a => a.StudentId).OnDelete(DeleteBehavior.NoAction);
-            entity.HasOne(a => a.Course).WithMany(c => c.AttendanceRecords).HasForeignKey(a => a.CourseId).OnDelete(DeleteBehavior.NoAction);
-            entity.HasOne(a => a.MarkedByFaculty).WithMany().HasForeignKey(a => a.MarkedBy).OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(r => r.GeneratedBy)
+                  .WithMany()
+                  .HasForeignKey(r => r.GeneratedByFK)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
+
+        // KPI — no FKs, no special config
+        // AuditPackage — no FKs, no special config
     }
 }

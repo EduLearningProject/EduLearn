@@ -5,8 +5,8 @@ namespace EduLearn.SISService.DTOs;
 public class CreateEnrollmentDto
 {
     [Required]
-    public int StudentId { get; set; }
+    public int StudentID { get; set; }
 
     [Required]
-    public int CourseId { get; set; }
+    public int SectionID { get; set; }
 }

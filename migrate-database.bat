@@ -1,62 +1,43 @@
 @echo off
 REM ============================================
-REM EduLearn Database Migration Script
-REM Run this ONCE after cloning to create the database
-REM Order matters: Auth creates Users table first,
-REM then LMS creates Courses, then SIS and Notification
+REM EduLearn Database Migration Script (PRD v10.0)
+REM Uses a single MigrationDbContext to create
+REM all 25 tables with all FK constraints in one
+REM atomic migration. No FK ordering issues.
 REM ============================================
+
+cd /d "%~dp0"
 
 echo ========================================
 echo EduLearn Database Migration
 echo Server: (localdb)\MSSQLLocalDB
 echo Database: EduLearnDb
+echo 25 Tables via single MigrationDbContext
 echo ========================================
 echo.
 
-echo [1/4] Creating Users table (AuthService)...
-dotnet ef database update --project EduLearn.AuthService
+dotnet ef --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo FAILED: AuthService migration. Fix errors above before continuing.
+    echo ERROR: dotnet-ef global tool is not installed.
+    echo     dotnet tool install --global dotnet-ef
     pause
     exit /b 1
 )
-echo [1/4] DONE
-echo.
 
-echo [2/4] Creating Courses, Materials, Assessments, Submissions, ForumPosts (LMSService)...
-dotnet ef database update --project EduLearn.LMSService
+echo Applying migrations...
+dotnet ef database update --project EduLearn.DbMigrator --startup-project EduLearn.DbMigrator
 if %ERRORLEVEL% NEQ 0 (
-    echo FAILED: LMSService migration. Fix errors above before continuing.
+    echo FAILED: Database migration failed. Fix errors above.
     pause
     exit /b 1
 )
-echo [2/4] DONE
-echo.
-
-echo [3/4] Creating Enrollments, Attendance (SISService)...
-dotnet ef database update --project EduLearn.SISService
-if %ERRORLEVEL% NEQ 0 (
-    echo FAILED: SISService migration. Fix errors above before continuing.
-    pause
-    exit /b 1
-)
-echo [3/4] DONE
-echo.
-
-echo [4/4] Creating Notifications (NotificationService)...
-dotnet ef database update --project EduLearn.NotificationService
-if %ERRORLEVEL% NEQ 0 (
-    echo FAILED: NotificationService migration. Fix errors above before continuing.
-    pause
-    exit /b 1
-)
-echo [4/4] DONE
+echo DONE
 echo.
 
 echo ========================================
 echo ALL MIGRATIONS COMPLETE
 echo Database: EduLearnDb
-echo Tables: 9 + __EFMigrationsHistory
+echo Tables: 25 + __EFMigrationsHistory
 echo ========================================
 echo.
 echo Next: Open EduLearn.slnx in VS 2022 and press F5

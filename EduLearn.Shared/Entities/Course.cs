@@ -1,41 +1,47 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.Shared.Entities;
 
 [Table("Courses")]
+[Index(nameof(Code), IsUnique = true)]
 public class Course
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+    public int CourseID { get; set; }
+
+    [Required]
+    [MaxLength(20)]
+    public string Code { get; set; } = null!;
 
     [Required]
     [MaxLength(200)]
     public string Title { get; set; } = null!;
 
-    [MaxLength(2000)]
     public string? Description { get; set; }
 
     [Required]
-    public int FacultyId { get; set; }
+    public int Credits { get; set; } = 3;
+
+    public int? DepartmentID { get; set; }
+
+    [MaxLength(20)]
+    public string? Level { get; set; }
+
+    public string? PrerequisitesJSON { get; set; }
 
     [Required]
-    public int Semester { get; set; }
-
-    public int MaxCapacity { get; set; } = 30;
-
-    public bool IsPublished { get; set; } = false;
+    [MaxLength(20)]
+    public string Status { get; set; } = "Active";
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
-    [ForeignKey(nameof(FacultyId))]
-    public User Faculty { get; set; } = null!;
-
-    public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
-    public ICollection<CourseMaterial> Materials { get; set; } = new List<CourseMaterial>();
+    public ICollection<Section> Sections { get; set; } = new List<Section>();
+    public ICollection<Content> Contents { get; set; } = new List<Content>();
+    public ICollection<Discussion> Discussions { get; set; } = new List<Discussion>();
     public ICollection<Assessment> Assessments { get; set; } = new List<Assessment>();
-    public ICollection<Attendance> AttendanceRecords { get; set; } = new List<Attendance>();
-    public ICollection<ForumPost> ForumPosts { get; set; } = new List<ForumPost>();
+    public ICollection<Syllabus> Syllabi { get; set; } = new List<Syllabus>();
 }

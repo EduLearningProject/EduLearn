@@ -20,39 +20,24 @@ public class CoursesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CourseResponseDto>> CreateCourse(CreateCourseDto dto, CancellationToken cancellationToken)
     {
-        var faculty = await _context.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == dto.FacultyId && u.Role == "Faculty", cancellationToken);
-
-        if (faculty is null)
-            return BadRequest(new { error = "Invalid FacultyId or user is not Faculty role", code = "INVALID_FACULTY" });
+        if (await _context.Courses.AnyAsync(c => c.Code == dto.Code, cancellationToken))
+            return Conflict(new { error = "Course code already exists", code = "DUPLICATE_COURSE_CODE" });
 
         var course = new Course
         {
+            Code = dto.Code,
             Title = dto.Title,
             Description = dto.Description,
-            FacultyId = dto.FacultyId,
-            Semester = dto.Semester,
-            MaxCapacity = dto.MaxCapacity
+            Credits = dto.Credits,
+            DepartmentID = dto.DepartmentID,
+            Level = dto.Level,
+            PrerequisitesJSON = dto.PrerequisitesJSON
         };
 
         _context.Courses.Add(course);
         await _context.SaveChangesAsync(cancellationToken);
 
-        var response = new CourseResponseDto
-        {
-            Id = course.Id,
-            Title = course.Title,
-            Description = course.Description,
-            FacultyId = course.FacultyId,
-            FacultyName = $"{faculty.FirstName} {faculty.LastName}",
-            Semester = course.Semester,
-            MaxCapacity = course.MaxCapacity,
-            IsPublished = course.IsPublished,
-            CreatedAt = course.CreatedAt
-        };
-
-        return CreatedAtAction(nameof(GetCourse), new { id = course.Id }, response);
+        return CreatedAtAction(nameof(GetCourse), new { id = course.CourseID }, MapToDto(course));
     }
 
     [HttpGet]
@@ -62,14 +47,15 @@ public class CoursesController : ControllerBase
             .AsNoTracking()
             .Select(c => new CourseResponseDto
             {
-                Id = c.Id,
+                CourseID = c.CourseID,
+                Code = c.Code,
                 Title = c.Title,
                 Description = c.Description,
-                FacultyId = c.FacultyId,
-                FacultyName = c.Faculty.FirstName + " " + c.Faculty.LastName,
-                Semester = c.Semester,
-                MaxCapacity = c.MaxCapacity,
-                IsPublished = c.IsPublished,
+                Credits = c.Credits,
+                DepartmentID = c.DepartmentID,
+                Level = c.Level,
+                PrerequisitesJSON = c.PrerequisitesJSON,
+                Status = c.Status,
                 CreatedAt = c.CreatedAt
             })
             .ToListAsync(cancellationToken);
@@ -82,24 +68,44 @@ public class CoursesController : ControllerBase
     {
         var course = await _context.Courses
             .AsNoTracking()
-            .Where(c => c.Id == id)
-            .Select(c => new CourseResponseDto
-            {
-                Id = c.Id,
-                Title = c.Title,
-                Description = c.Description,
-                FacultyId = c.FacultyId,
-                FacultyName = c.Faculty.FirstName + " " + c.Faculty.LastName,
-                Semester = c.Semester,
-                MaxCapacity = c.MaxCapacity,
-                IsPublished = c.IsPublished,
-                CreatedAt = c.CreatedAt
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(c => c.CourseID == id, cancellationToken);
 
         if (course is null)
             return NotFound(new { error = "Course not found", code = "COURSE_NOT_FOUND" });
 
-        return Ok(course);
+        return Ok(MapToDto(course));
     }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<CourseResponseDto>> UpdateCourse(int id, CreateCourseDto dto, CancellationToken cancellationToken)
+    {
+        var course = await _context.Courses.FirstOrDefaultAsync(c => c.CourseID == id, cancellationToken);
+
+        if (course is null)
+            return NotFound(new { error = "Course not found", code = "COURSE_NOT_FOUND" });
+
+        course.Title = dto.Title;
+        course.Description = dto.Description;
+        course.Credits = dto.Credits;
+        course.DepartmentID = dto.DepartmentID;
+        course.Level = dto.Level;
+        course.PrerequisitesJSON = dto.PrerequisitesJSON;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok(MapToDto(course));
+    }
+
+    private static CourseResponseDto MapToDto(Course course) => new()
+    {
+        CourseID = course.CourseID,
+        Code = course.Code,
+        Title = course.Title,
+        Description = course.Description,
+        Credits = course.Credits,
+        DepartmentID = course.DepartmentID,
+        Level = course.Level,
+        PrerequisitesJSON = course.PrerequisitesJSON,
+        Status = course.Status,
+        CreatedAt = course.CreatedAt
+    };
 }
