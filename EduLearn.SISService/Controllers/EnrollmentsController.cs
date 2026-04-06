@@ -1,6 +1,7 @@
 using EduLearn.SISService.Data;
 using EduLearn.SISService.DTOs;
 using EduLearn.Shared.Entities;
+using EduLearn.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,21 +46,21 @@ public class EnrollmentsController : ControllerBase
 
             // Duplicate check inside transaction to prevent race conditions
             if (await _context.Enrollments.AnyAsync(
-                e => e.StudentID == dto.StudentID && e.SectionID == dto.SectionID && e.Status != "Dropped", cancellationToken))
+                e => e.StudentID == dto.StudentID && e.SectionID == dto.SectionID && e.Status != EnrollmentStatus.Dropped, cancellationToken))
             {
                 await transaction.RollbackAsync(cancellationToken);
                 return Conflict(new { error = "Student is already enrolled in this section", code = "DUPLICATE_ENROLLMENT" });
             }
 
-            var status = "Enrolled";
+            var status = EnrollmentStatus.Enrolled;
             int? waitlistPosition = null;
 
             // Check capacity on fresh section data
             if (section.EnrolledCount >= section.Capacity)
             {
-                status = "Waitlisted";
+                status = EnrollmentStatus.Waitlisted;
                 var maxPosition = await _context.Enrollments
-                    .Where(e => e.SectionID == dto.SectionID && e.Status == "Waitlisted")
+                    .Where(e => e.SectionID == dto.SectionID && e.Status == EnrollmentStatus.Waitlisted)
                     .MaxAsync(e => (int?)e.WaitlistPosition, cancellationToken) ?? 0;
                 waitlistPosition = maxPosition + 1;
             }
@@ -75,7 +76,7 @@ public class EnrollmentsController : ControllerBase
             _context.Enrollments.Add(enrollment);
 
             // Update enrolled count if not waitlisted
-            if (status == "Enrolled")
+            if (status == EnrollmentStatus.Enrolled)
             {
                 section.EnrolledCount++;
             }
@@ -122,8 +123,8 @@ public class EnrollmentsController : ControllerBase
                 return NotFound(new { error = "Enrollment not found", code = "ENROLLMENT_NOT_FOUND" });
             }
 
-            var wasEnrolled = enrollment.Status == "Enrolled";
-            enrollment.Status = "Dropped";
+            var wasEnrolled = enrollment.Status == EnrollmentStatus.Enrolled;
+            enrollment.Status = EnrollmentStatus.Dropped;
 
             // If the student was enrolled (not waitlisted), decrement count and auto-promote
             if (wasEnrolled)
@@ -133,13 +134,13 @@ public class EnrollmentsController : ControllerBase
 
                 // Auto-promote first waitlisted student
                 var nextInLine = await _context.Enrollments
-                    .Where(e => e.SectionID == enrollment.SectionID && e.Status == "Waitlisted")
+                    .Where(e => e.SectionID == enrollment.SectionID && e.Status == EnrollmentStatus.Waitlisted)
                     .OrderBy(e => e.WaitlistPosition)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 if (nextInLine is not null)
                 {
-                    nextInLine.Status = "Enrolled";
+                    nextInLine.Status = EnrollmentStatus.Enrolled;
                     nextInLine.WaitlistPosition = null;
                     section.EnrolledCount++;
                 }

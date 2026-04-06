@@ -2,6 +2,71 @@
 
 6 Microservices • 25 Entities • 9 Modules • 7 Roles • Enterprise Scope
 
+---
+
+## What Changed in the `Database` Branch
+
+This branch establishes the complete database foundation for the project. Below is a summary of every change made.
+
+### 1. Shared Enum Library (`EduLearn.Shared/Enums/`)
+
+All magic strings previously scattered across entities, DTOs, and controllers have been replaced with strongly-typed C# enums. 9 new enum files were created:
+
+| File | Enums Defined |
+|------|--------------|
+| `UserEnums.cs` | `UserRole`, `UserStatus` |
+| `EnrollmentEnums.cs` | `EnrollmentStatus`, `StudentLifecycleStatus` |
+| `CourseEnums.cs` | `CourseStatus` |
+| `AdmissionsEnums.cs` | `ApplicationStatus`, `TranscriptStatus` |
+| `AssessmentEnums.cs` | `AssessmentType`, `AssessmentStatus`, `SubmissionStatus` |
+| `ContentEnums.cs` | `ContentType`, `ContentStatus`, `DiscussionStatus` |
+| `FinanceEnums.cs` | `FeeScheduleStatus`, `InvoiceStatus`, `PaymentStatus`, `PaymentMethod`, `ScholarshipStatus` |
+| `NotificationEnums.cs` | `NotificationCategory`, `NotificationSeverity`, `NotificationStatus`, `TicketStatus`, `TicketPriority` |
+| `AnalyticsEnums.cs` | `ReportScope`, `ReportingPeriod` |
+
+All enum values are stored in the database as **strings** (e.g., `"Enrolled"`, `"Active"`) via EF Core's `HasConversion<string>()` — never as integers.
+
+### 2. Entities Updated (15 files)
+
+All entity classes in `EduLearn.Shared/Entities/` now use the typed enums instead of raw strings for status, type, role, and category fields:
+
+`User`, `Student`, `Applicant`, `Transcript`, `Enrollment`, `Course`, `Assessment`, `Submission`, `Content`, `Discussion`, `FeeSchedule`, `Invoice`, `Payment`, `Scholarship`, `Notification`, `Ticket`, `Report`, `KPI`
+
+### 3. DTOs Updated (5 files)
+
+DTOs now use enum types — regex validators for role/status strings have been removed:
+- `CreateUserDto.cs` — `UserRole Role`
+- `UpdateStatusDto.cs` — `UserStatus Status`
+- `UserResponseDto.cs` — `UserRole Role`, `UserStatus Status`
+- `EnrollmentResponseDto.cs` — `EnrollmentStatus Status`
+- `CourseResponseDto.cs` — `CourseStatus Status`
+
+### 4. DbContexts Updated (7 files)
+
+All per-service DbContexts and `MigrationDbContext` now configure `HasConversion<string>().HasMaxLength(N)` for every enum property. This ensures EF Core stores and reads enums as nvarchar strings correctly.
+
+Services updated: `AuthDbContext`, `SISDbContext`, `LMSDbContext`, `AnalyticsDbContext`, `NotificationDbContext`, `FinanceDbContext`, `MigrationDbContext`
+
+### 5. Controller Updated (1 file)
+
+`EnrollmentsController.cs` — all 9 string literal comparisons/assignments replaced with typed enum values (e.g., `EnrollmentStatus.Dropped`, `EnrollmentStatus.Waitlisted`).
+
+### 6. Swagger Enum Display (6 Program.cs files)
+
+All 6 service `Program.cs` files now:
+- Serialize enums as strings in JSON responses via `JsonStringEnumConverter`
+- Display enum string options as dropdowns in Swagger UI via `EnumSchemaFilter` + `UseInlineDefinitionsForEnums()`
+
+This means Swagger shows `"Student" | "Instructor" | "Registrar" | ...` instead of `0 | 1 | 2 | ...`.
+
+### 7. Database Migration: `FinalizeSchema`
+
+A new migration `20260406101147_FinalizeSchema` was added to `EduLearn.DbMigrator/Migrations/`. It:
+- Drops `RefreshToken` and `RefreshTokenExpiry` columns from the `Users` table
+- Adjusts column lengths for `Tickets.Priority` (→ 20), `Reports.Scope` (→ 30), `Notifications.Severity` (→ 20), `KPIs.ReportingPeriod` (→ 20) to match actual max enum value lengths
+
+---
+
 ## Quick Start (For Team Members)
 
 ### Prerequisites
@@ -10,7 +75,7 @@
 - SQL Server LocalDB (installed with VS 2022)
 - EF Core CLI: `dotnet tool install --global dotnet-ef`
 
-### Setup Steps
+### First-Time Setup
 
 1. Clone the repo:
    ```
@@ -25,12 +90,10 @@
 
 3. Create the database (run from solution root):
    ```
-   .\add-migrations.bat
    .\migrate-database.bat
    ```
    **OR** run manually:
    ```
-   dotnet ef migrations add InitialCreate --project EduLearn.DbMigrator --startup-project EduLearn.DbMigrator
    dotnet ef database update --project EduLearn.DbMigrator --startup-project EduLearn.DbMigrator
    ```
 
@@ -43,7 +106,28 @@
    ```
    Open: http://localhost:5001/swagger
 
-### Architecture
+### Pulling Updates From This Branch
+
+If you already have a local database from a previous pull:
+
+1. `git pull`
+2. Run `.\migrate-database.bat` — EF Core will detect and apply any new migrations automatically
+
+> **Important:** Skipping step 2 after a pull that contains new migrations will cause a runtime startup error.
+
+### Resetting the Database
+
+```sql
+-- In SSMS, connect to (localdb)\MSSQLLocalDB, run on master:
+USE master;
+ALTER DATABASE EduLearnDb SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+DROP DATABASE EduLearnDb;
+```
+Then re-run `.\migrate-database.bat`.
+
+---
+
+## Architecture
 
 6 ASP.NET Core 8 microservices + 1 migration project sharing a single SQL Server database (EduLearnDb):
 
@@ -65,23 +149,15 @@ Individual services use their own DbContexts at runtime for queries, but **never
 
 **Why this pattern?** Multiple services with cross-service FK dependencies (e.g., LMS's Assessments table references SIS's Sections table) cannot be migrated independently without FK ordering failures. The single-migrator pattern is used by production frameworks like ABP and is recommended by Microsoft for shared-database architectures.
 
-### Resetting the Database
-
-```sql
--- In SSMS, connect to (localdb)\MSSQLLocalDB, run on master:
-USE master;
-ALTER DATABASE EduLearnDb SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-DROP DATABASE EduLearnDb;
-```
-Then re-run `.\migrate-database.bat`.
-
 ### Connection String
 
 All services connect to: `Server=(localdb)\MSSQLLocalDB;Database=EduLearnDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true`
 
 Update `ConnectionStrings.DefaultConnection` in each service's `appsettings.json` if using a different SQL Server instance.
 
-### Team Assignment
+---
+
+## Team Assignment
 
 | Member | Name | Service | Features |
 |--------|------|---------|----------|
@@ -92,7 +168,9 @@ Update `ConnectionStrings.DefaultConnection` in each service's `appsettings.json
 | M5 | Tanya | FinanceService (:5006) | SFB-01 through SFB-04 |
 | M6 | Swarna Priyanshu | NotificationService (:5005) | NHT-01 through NHT-03 |
 
-### Technology Stack
+---
+
+## Technology Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
@@ -104,7 +182,9 @@ Update `ConnectionStrings.DefaultConnection` in each service's `appsettings.json
 | Testing | NUnit 3 + Moq | Unit + integration tests |
 | Frontend | React 18 + TypeScript | SPA with role-based UI (post-interim) |
 
-### Git Conventions
+---
+
+## Git Conventions
 
 - Branch naming: `feature/<desc>`, `fix/<desc>`, `chore/<desc>`
 - Commit messages: Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`)

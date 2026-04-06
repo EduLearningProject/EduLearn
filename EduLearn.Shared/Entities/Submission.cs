@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -32,8 +33,7 @@ public class Submission
     public string? PlagiarismReportURI { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Submitted";
+    public SubmissionStatus Status { get; set; } = SubmissionStatus.Submitted;
 
     // Navigation properties
     [ForeignKey(nameof(AssessmentID))]

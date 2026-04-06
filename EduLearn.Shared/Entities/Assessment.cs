@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -20,8 +21,7 @@ public class Assessment
     public string Title { get; set; } = null!;
 
     [Required]
-    [MaxLength(20)]
-    public string Type { get; set; } = null!;
+    public AssessmentType Type { get; set; }
 
     public DateTime? DueAt { get; set; }
 
@@ -37,8 +37,7 @@ public class Assessment
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Draft";
+    public AssessmentStatus Status { get; set; } = AssessmentStatus.Draft;
 
     // Navigation properties
     [ForeignKey(nameof(CourseID))]

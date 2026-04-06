@@ -1,4 +1,5 @@
 using EduLearn.Shared.Entities;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.DbMigrator.Data;
@@ -60,6 +61,9 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
+            entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(u => u.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasMany(u => u.AuditLogs)
                   .WithOne(a => a.User)
                   .HasForeignKey(a => a.UserID)
@@ -89,6 +93,8 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<Student>(entity =>
         {
+            entity.Property(s => s.EnrollmentStatus).HasConversion<string>().HasMaxLength(20);
+
             // User FK: configured in User entity block
             // Program FK: configured in Program entity block
 
@@ -118,7 +124,17 @@ public class MigrationDbContext : DbContext
                   .OnDelete(DeleteBehavior.NoAction);
         });
 
-        // Applicant — no FKs
+        modelBuilder.Entity<Applicant>(entity =>
+        {
+            entity.Property(a => a.ApplicationStatus).HasConversion<string>().HasMaxLength(30);
+        });
+
+        modelBuilder.Entity<Transcript>(entity =>
+        {
+            entity.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
+        });
+
+        // Applicant — no FKs (config above)
 
         modelBuilder.Entity<Section>(entity =>
         {
@@ -141,6 +157,11 @@ public class MigrationDbContext : DbContext
                   .OnDelete(DeleteBehavior.NoAction);
         });
 
+        modelBuilder.Entity<Enrollment>(entity =>
+        {
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+        });
+
         // Enrollment — FKs configured via Student and Section above
         // Transcript — FK configured via Student above
         // Room — no outgoing FKs
@@ -151,6 +172,8 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<Course>(entity =>
         {
+            entity.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasMany(c => c.Sections)
                   .WithOne(s => s.Course)
                   .HasForeignKey(s => s.CourseID)
@@ -202,6 +225,9 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<Content>(entity =>
         {
+            entity.Property(ct => ct.Type).HasConversion<string>().HasMaxLength(20);
+            entity.Property(ct => ct.Status).HasConversion<string>().HasMaxLength(20);
+
             // Course FK configured via Course above
 
             entity.HasOne(ct => ct.UploadedBy)
@@ -212,6 +238,8 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<Discussion>(entity =>
         {
+            entity.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
+
             // Course FK configured via Course above
 
             entity.HasOne(d => d.ThreadStarter)
@@ -222,6 +250,9 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<Assessment>(entity =>
         {
+            entity.Property(a => a.Type).HasConversion<string>().HasMaxLength(20);
+            entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+
             // Course FK configured via Course above
             // Section FK configured via Section above
 
@@ -238,6 +269,8 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<Submission>(entity =>
         {
+            entity.Property(s => s.Status).HasConversion<string>().HasMaxLength(20);
+
             // Assessment FK configured via Assessment above
             // Student FK configured via Student above
 
@@ -266,16 +299,32 @@ public class MigrationDbContext : DbContext
         // FinanceService entities
         // ════════════════════════════════════════
 
-        // FeeSchedule — Program FK configured via Program above
+        modelBuilder.Entity<FeeSchedule>(entity =>
+        {
+            entity.Property(f => f.Status).HasConversion<string>().HasMaxLength(20);
+        });
 
         modelBuilder.Entity<Invoice>(entity =>
         {
+            entity.Property(i => i.Status).HasConversion<string>().HasMaxLength(20);
+
             // Student FK configured via Student above
 
             entity.HasMany(i => i.Payments)
                   .WithOne(p => p.Invoice)
                   .HasForeignKey(p => p.InvoiceID)
                   .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.Property(p => p.Method).HasConversion<string>().HasMaxLength(30);
+            entity.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<Scholarship>(entity =>
+        {
+            entity.Property(sc => sc.Status).HasConversion<string>().HasMaxLength(20);
         });
 
         // Payment — Invoice FK configured via Invoice above
@@ -285,10 +334,18 @@ public class MigrationDbContext : DbContext
         // NotificationService entities
         // ════════════════════════════════════════
 
-        // Notification — User FK configured via User above
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.Property(n => n.Category).HasConversion<string>().HasMaxLength(30);
+            entity.Property(n => n.Severity).HasConversion<string>().HasMaxLength(20);
+            entity.Property(n => n.Status).HasConversion<string>().HasMaxLength(20);
+        });
 
         modelBuilder.Entity<Ticket>(entity =>
         {
+            entity.Property(t => t.Priority).HasConversion<string>().HasMaxLength(20);
+            entity.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(t => t.CreatedBy)
                   .WithMany()
                   .HasForeignKey(t => t.CreatedByFK)
@@ -306,13 +363,19 @@ public class MigrationDbContext : DbContext
 
         modelBuilder.Entity<Report>(entity =>
         {
+            entity.Property(r => r.Scope).HasConversion<string>().HasMaxLength(30);
+
             entity.HasOne(r => r.GeneratedBy)
                   .WithMany()
                   .HasForeignKey(r => r.GeneratedByFK)
                   .OnDelete(DeleteBehavior.NoAction);
         });
 
-        // KPI — no FKs
+        modelBuilder.Entity<KPI>(entity =>
+        {
+            entity.Property(k => k.ReportingPeriod).HasConversion<string>().HasMaxLength(20);
+        });
+
         // AuditPackage — no FKs
     }
 }

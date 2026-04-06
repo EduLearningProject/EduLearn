@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -18,8 +19,7 @@ public class Content
     public string Title { get; set; } = null!;
 
     [Required]
-    [MaxLength(20)]
-    public string Type { get; set; } = null!;
+    public ContentType Type { get; set; }
 
     [Required]
     [MaxLength(500)]
@@ -36,8 +36,7 @@ public class Content
     public string? MetadataJSON { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Active";
+    public ContentStatus Status { get; set; } = ContentStatus.Active;
 
     // Navigation properties
     [ForeignKey(nameof(CourseID))]

@@ -1,4 +1,5 @@
 using EduLearn.Shared.Entities;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.NotificationService.Data;
@@ -46,6 +47,8 @@ public class NotificationDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
+            entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(u => u.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(u => u.AuditLogs);
             entity.Ignore(u => u.Student);
             entity.Ignore(u => u.InstructorSections);
@@ -54,6 +57,10 @@ public class NotificationDbContext : DbContext
         // ── Notification (owned) ──
         modelBuilder.Entity<Notification>(entity =>
         {
+            entity.Property(n => n.Category).HasConversion<string>().HasMaxLength(30);
+            entity.Property(n => n.Severity).HasConversion<string>().HasMaxLength(20);
+            entity.Property(n => n.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(n => n.User)
                   .WithMany(u => u.Notifications)
                   .HasForeignKey(n => n.UserID)
@@ -63,6 +70,9 @@ public class NotificationDbContext : DbContext
         // ── Ticket (owned) ──
         modelBuilder.Entity<Ticket>(entity =>
         {
+            entity.Property(t => t.Priority).HasConversion<string>().HasMaxLength(20);
+            entity.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(t => t.CreatedBy)
                   .WithMany()
                   .HasForeignKey(t => t.CreatedByFK)

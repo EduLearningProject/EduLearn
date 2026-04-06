@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -19,8 +20,7 @@ public class Enrollment
     public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Enrolled";
+    public EnrollmentStatus Status { get; set; } = EnrollmentStatus.Enrolled;
 
     public int? WaitlistPosition { get; set; }
 

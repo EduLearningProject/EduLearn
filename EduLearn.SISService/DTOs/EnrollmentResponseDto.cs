@@ -1,3 +1,5 @@
+using EduLearn.Shared.Enums;
+
 namespace EduLearn.SISService.DTOs;
 
 public class EnrollmentResponseDto
@@ -8,7 +10,7 @@ public class EnrollmentResponseDto
     public int SectionID { get; set; }
     public string CourseName { get; set; } = null!;
     public string Term { get; set; } = null!;
-    public string Status { get; set; } = null!;
+    public EnrollmentStatus Status { get; set; }
     public int? WaitlistPosition { get; set; }
     public bool GradePostedFlag { get; set; }
     public DateTime EnrolledAt { get; set; }

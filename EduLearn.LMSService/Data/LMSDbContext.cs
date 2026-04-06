@@ -1,4 +1,5 @@
 using EduLearn.Shared.Entities;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.LMSService.Data;
@@ -46,6 +47,8 @@ public class LMSDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
+            entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(u => u.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(u => u.AuditLogs);
             entity.Ignore(u => u.Notifications);
         });
@@ -72,6 +75,7 @@ public class LMSDbContext : DbContext
         modelBuilder.Entity<Student>(entity =>
         {
             entity.ToTable("Students", t => t.ExcludeFromMigrations());
+            entity.Property(s => s.EnrollmentStatus).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(s => s.Enrollments);
             entity.Ignore(s => s.Transcripts);
             entity.Ignore(s => s.Invoices);
@@ -95,6 +99,10 @@ public class LMSDbContext : DbContext
         });
 
         // ── Course (owned) ──
+        modelBuilder.Entity<Course>(entity =>
+        {
+            entity.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
+        });
 
         // ── Syllabus (owned) ──
         modelBuilder.Entity<Syllabus>(entity =>
@@ -113,6 +121,9 @@ public class LMSDbContext : DbContext
         // ── Content (owned) ──
         modelBuilder.Entity<Content>(entity =>
         {
+            entity.Property(ct => ct.Type).HasConversion<string>().HasMaxLength(20);
+            entity.Property(ct => ct.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(ct => ct.Course)
                   .WithMany(c => c.Contents)
                   .HasForeignKey(ct => ct.CourseID)
@@ -127,6 +138,8 @@ public class LMSDbContext : DbContext
         // ── Discussion (owned) ──
         modelBuilder.Entity<Discussion>(entity =>
         {
+            entity.Property(d => d.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(d => d.Course)
                   .WithMany(c => c.Discussions)
                   .HasForeignKey(d => d.CourseID)
@@ -141,6 +154,9 @@ public class LMSDbContext : DbContext
         // ── Assessment (owned) ──
         modelBuilder.Entity<Assessment>(entity =>
         {
+            entity.Property(a => a.Type).HasConversion<string>().HasMaxLength(20);
+            entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(a => a.Course)
                   .WithMany(c => c.Assessments)
                   .HasForeignKey(a => a.CourseID)
@@ -160,6 +176,8 @@ public class LMSDbContext : DbContext
         // ── Submission (owned) ──
         modelBuilder.Entity<Submission>(entity =>
         {
+            entity.Property(s => s.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(s => s.Assessment)
                   .WithMany(a => a.Submissions)
                   .HasForeignKey(s => s.AssessmentID)

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -24,6 +25,5 @@ public class KPI
     public decimal? CurrentValue { get; set; }
 
     [Required]
-    [MaxLength(50)]
-    public string ReportingPeriod { get; set; } = null!;
+    public ReportingPeriod ReportingPeriod { get; set; }
 }

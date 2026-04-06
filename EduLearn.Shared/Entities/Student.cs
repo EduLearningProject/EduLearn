@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.Shared.Entities;
@@ -35,7 +36,7 @@ public class Student
 
     [Required]
     [MaxLength(20)]
-    public string EnrollmentStatus { get; set; } = "Active";
+    public StudentLifecycleStatus EnrollmentStatus { get; set; } = StudentLifecycleStatus.Active;
 
     [Required]
     public int ProgramID { get; set; }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -29,8 +30,7 @@ public class FeeSchedule
     public DateTime EffectiveTo { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Active";
+    public FeeScheduleStatus Status { get; set; } = FeeScheduleStatus.Draft;
 
     // Navigation properties
     [ForeignKey(nameof(ProgramID))]

@@ -42,6 +42,9 @@ public class AuthDbContext : DbContext
         // ── User (owned) ──
         modelBuilder.Entity<User>(entity =>
         {
+            entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(u => u.Status).HasConversion<string>().HasMaxLength(20);
+
             // Ignore nav properties pointing to entities not in this context
             entity.Ignore(u => u.Student);
             entity.Ignore(u => u.InstructorSections);

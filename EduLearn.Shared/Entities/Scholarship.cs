@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -32,8 +33,7 @@ public class Scholarship
     public DateTime ValidTo { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Active";
+    public ScholarshipStatus Status { get; set; } = ScholarshipStatus.Active;
 
     // Navigation properties
     [ForeignKey(nameof(StudentID))]

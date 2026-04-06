@@ -1,3 +1,5 @@
+using EduLearn.Shared.Enums;
+
 namespace EduLearn.LMSService.DTOs;
 
 public class CourseResponseDto
@@ -10,6 +12,6 @@ public class CourseResponseDto
     public int? DepartmentID { get; set; }
     public string? Level { get; set; }
     public string? PrerequisitesJSON { get; set; }
-    public string Status { get; set; } = null!;
+    public CourseStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
 }

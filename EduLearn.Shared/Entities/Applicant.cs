@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -29,7 +30,7 @@ public class Applicant
 
     [Required]
     [MaxLength(30)]
-    public string ApplicationStatus { get; set; } = "Submitted";
+    public ApplicationStatus ApplicationStatus { get; set; } = ApplicationStatus.Submitted;
 
     public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
 

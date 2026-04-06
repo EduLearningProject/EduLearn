@@ -1,4 +1,5 @@
 using EduLearn.Shared.Entities;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.AnalyticsService.Data;
@@ -47,6 +48,8 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
+            entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(u => u.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(u => u.AuditLogs);
             entity.Ignore(u => u.Notifications);
         });
@@ -54,6 +57,7 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Student>(entity =>
         {
             entity.ToTable("Students", t => t.ExcludeFromMigrations());
+            entity.Property(s => s.EnrollmentStatus).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(s => s.Transcripts);
             entity.Ignore(s => s.Invoices);
             entity.Ignore(s => s.Scholarships);
@@ -72,6 +76,7 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Course>(entity =>
         {
             entity.ToTable("Courses", t => t.ExcludeFromMigrations());
+            entity.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(c => c.Contents);
             entity.Ignore(c => c.Discussions);
             entity.Ignore(c => c.Syllabi);
@@ -102,6 +107,7 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Enrollment>(entity =>
         {
             entity.ToTable("Enrollments", t => t.ExcludeFromMigrations());
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
 
             entity.HasOne(e => e.Student)
                   .WithMany(s => s.Enrollments)
@@ -117,6 +123,8 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Assessment>(entity =>
         {
             entity.ToTable("Assessments", t => t.ExcludeFromMigrations());
+            entity.Property(a => a.Type).HasConversion<string>().HasMaxLength(20);
+            entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
 
             entity.HasOne(a => a.Course)
                   .WithMany(c => c.Assessments)
@@ -137,6 +145,7 @@ public class AnalyticsDbContext : DbContext
         modelBuilder.Entity<Submission>(entity =>
         {
             entity.ToTable("Submissions", t => t.ExcludeFromMigrations());
+            entity.Property(s => s.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(s => s.GradeChanges);
 
             entity.HasOne(s => s.Assessment)
@@ -159,13 +168,19 @@ public class AnalyticsDbContext : DbContext
 
         modelBuilder.Entity<Report>(entity =>
         {
+            entity.Property(r => r.Scope).HasConversion<string>().HasMaxLength(30);
+
             entity.HasOne(r => r.GeneratedBy)
                   .WithMany()
                   .HasForeignKey(r => r.GeneratedByFK)
                   .OnDelete(DeleteBehavior.NoAction);
         });
 
-        // KPI — no FKs, no special config
+        modelBuilder.Entity<KPI>(entity =>
+        {
+            entity.Property(k => k.ReportingPeriod).HasConversion<string>().HasMaxLength(20);
+        });
+
         // AuditPackage — no FKs, no special config
     }
 }

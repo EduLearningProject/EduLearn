@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -25,8 +26,7 @@ public class Discussion
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Open";
+    public DiscussionStatus Status { get; set; } = DiscussionStatus.Open;
 
     // Navigation properties
     [ForeignKey(nameof(CourseID))]

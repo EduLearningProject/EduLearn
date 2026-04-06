@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -20,20 +21,17 @@ public class Notification
     public string Message { get; set; } = null!;
 
     [Required]
-    [MaxLength(30)]
-    public string Category { get; set; } = null!;
+    public NotificationCategory Category { get; set; }
 
     [Required]
-    [MaxLength(10)]
-    public string Severity { get; set; } = "Info";
+    public NotificationSeverity Severity { get; set; } = NotificationSeverity.Info;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? ReadAt { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Active";
+    public NotificationStatus Status { get; set; } = NotificationStatus.Active;
 
     // Navigation properties
     [ForeignKey(nameof(UserID))]

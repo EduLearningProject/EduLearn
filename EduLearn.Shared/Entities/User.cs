@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.Shared.Entities;
@@ -30,7 +31,7 @@ public class User
 
     [Required]
     [MaxLength(30)]
-    public string Role { get; set; } = null!;
+    public UserRole Role { get; set; } = UserRole.Student;
 
     [Required]
     [MaxLength(500)]
@@ -40,12 +41,7 @@ public class User
 
     [Required]
     [MaxLength(20)]
-    public string Status { get; set; } = "Active";
-
-    [MaxLength(500)]
-    public string? RefreshToken { get; set; }
-
-    public DateTime? RefreshTokenExpiry { get; set; }
+    public UserStatus Status { get; set; } = UserStatus.Active;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

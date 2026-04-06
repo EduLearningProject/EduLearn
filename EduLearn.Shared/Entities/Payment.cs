@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -20,15 +21,13 @@ public class Payment
     public decimal Amount { get; set; }
 
     [Required]
-    [MaxLength(30)]
-    public string Method { get; set; } = null!;
+    public PaymentMethod Method { get; set; }
 
     [MaxLength(100)]
     public string? Reference { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Completed";
+    public PaymentStatus Status { get; set; } = PaymentStatus.Completed;
 
     // Navigation properties
     [ForeignKey(nameof(InvoiceID))]

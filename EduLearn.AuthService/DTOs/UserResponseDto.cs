@@ -1,3 +1,5 @@
+using EduLearn.Shared.Enums;
+
 namespace EduLearn.AuthService.DTOs;
 
 public class UserResponseDto
@@ -7,9 +9,9 @@ public class UserResponseDto
     public string FullName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
-    public string Role { get; set; } = null!;
+    public UserRole Role { get; set; }
     public bool MFAEnabled { get; set; }
-    public string Status { get; set; } = null!;
+    public UserStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

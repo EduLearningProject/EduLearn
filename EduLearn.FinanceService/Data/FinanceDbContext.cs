@@ -1,4 +1,5 @@
 using EduLearn.Shared.Entities;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.FinanceService.Data;
@@ -46,6 +47,8 @@ public class FinanceDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
+            entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(u => u.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(u => u.AuditLogs);
             entity.Ignore(u => u.InstructorSections);
             entity.Ignore(u => u.Notifications);
@@ -55,6 +58,7 @@ public class FinanceDbContext : DbContext
         modelBuilder.Entity<Student>(entity =>
         {
             entity.ToTable("Students", t => t.ExcludeFromMigrations());
+            entity.Property(s => s.EnrollmentStatus).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(s => s.Enrollments);
             entity.Ignore(s => s.Submissions);
             entity.Ignore(s => s.Transcripts);
@@ -79,6 +83,8 @@ public class FinanceDbContext : DbContext
         // ── FeeSchedule (owned) ──
         modelBuilder.Entity<FeeSchedule>(entity =>
         {
+            entity.Property(f => f.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(f => f.Program)
                   .WithMany(p => p.FeeSchedules)
                   .HasForeignKey(f => f.ProgramID)
@@ -88,6 +94,8 @@ public class FinanceDbContext : DbContext
         // ── Invoice (owned) ──
         modelBuilder.Entity<Invoice>(entity =>
         {
+            entity.Property(i => i.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(i => i.Student)
                   .WithMany(s => s.Invoices)
                   .HasForeignKey(i => i.StudentID)
@@ -97,6 +105,9 @@ public class FinanceDbContext : DbContext
         // ── Payment (owned) ──
         modelBuilder.Entity<Payment>(entity =>
         {
+            entity.Property(p => p.Method).HasConversion<string>().HasMaxLength(30);
+            entity.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(p => p.Invoice)
                   .WithMany(i => i.Payments)
                   .HasForeignKey(p => p.InvoiceID)
@@ -106,6 +117,8 @@ public class FinanceDbContext : DbContext
         // ── Scholarship (owned) ──
         modelBuilder.Entity<Scholarship>(entity =>
         {
+            entity.Property(sc => sc.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(sc => sc.Student)
                   .WithMany(s => s.Scholarships)
                   .HasForeignKey(sc => sc.StudentID)

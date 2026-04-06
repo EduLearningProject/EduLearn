@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.Shared.Entities;
@@ -33,8 +34,7 @@ public class Course
     public string? PrerequisitesJSON { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Active";
+    public CourseStatus Status { get; set; } = CourseStatus.Active;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

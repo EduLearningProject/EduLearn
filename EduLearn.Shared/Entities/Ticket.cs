@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -23,16 +24,14 @@ public class Ticket
     public string Description { get; set; } = null!;
 
     [Required]
-    [MaxLength(10)]
-    public string Priority { get; set; } = "Medium";
+    public TicketPriority Priority { get; set; } = TicketPriority.Medium;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Open";
+    public TicketStatus Status { get; set; } = TicketStatus.Open;
 
     [MaxLength(500)]
     public string? ResolutionURI { get; set; }

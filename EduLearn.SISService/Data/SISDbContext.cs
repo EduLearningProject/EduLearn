@@ -1,4 +1,5 @@
 using EduLearn.Shared.Entities;
+using EduLearn.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduLearn.SISService.Data;
@@ -46,6 +47,8 @@ public class SISDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users", t => t.ExcludeFromMigrations());
+            entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(u => u.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(u => u.AuditLogs);
             entity.Ignore(u => u.Notifications);
         });
@@ -54,6 +57,7 @@ public class SISDbContext : DbContext
         modelBuilder.Entity<Course>(entity =>
         {
             entity.ToTable("Courses", t => t.ExcludeFromMigrations());
+            entity.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(c => c.Contents);
             entity.Ignore(c => c.Discussions);
             entity.Ignore(c => c.Assessments);
@@ -70,6 +74,7 @@ public class SISDbContext : DbContext
         // ── Student (owned) ──
         modelBuilder.Entity<Student>(entity =>
         {
+            entity.Property(s => s.EnrollmentStatus).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(s => s.Submissions);
             entity.Ignore(s => s.Invoices);
             entity.Ignore(s => s.Scholarships);
@@ -82,15 +87,6 @@ public class SISDbContext : DbContext
             entity.HasOne(s => s.Program)
                   .WithMany(p => p.Students)
                   .HasForeignKey(s => s.ProgramID)
-                  .OnDelete(DeleteBehavior.NoAction);
-        });
-
-        // ── Transcript (owned) ──
-        modelBuilder.Entity<Transcript>(entity =>
-        {
-            entity.HasOne(t => t.Student)
-                  .WithMany(s => s.Transcripts)
-                  .HasForeignKey(t => t.StudentID)
                   .OnDelete(DeleteBehavior.NoAction);
         });
 
@@ -115,9 +111,28 @@ public class SISDbContext : DbContext
                   .OnDelete(DeleteBehavior.NoAction);
         });
 
+        // ── Applicant (owned) ──
+        modelBuilder.Entity<Applicant>(entity =>
+        {
+            entity.Property(a => a.ApplicationStatus).HasConversion<string>().HasMaxLength(30);
+        });
+
+        // ── Transcript (owned) ──
+        modelBuilder.Entity<Transcript>(entity =>
+        {
+            entity.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
+
+            entity.HasOne(t => t.Student)
+                  .WithMany(s => s.Transcripts)
+                  .HasForeignKey(t => t.StudentID)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
         // ── Enrollment (owned) ──
         modelBuilder.Entity<Enrollment>(entity =>
         {
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(e => e.Student)
                   .WithMany(s => s.Enrollments)
                   .HasForeignKey(e => e.StudentID)
@@ -130,6 +145,5 @@ public class SISDbContext : DbContext
         });
 
         // ── Room (owned) — no special config needed ──
-        // ── Applicant (owned) — no FKs, no special config needed ──
     }
 }

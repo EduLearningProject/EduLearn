@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.AuthService.DTOs;
 
@@ -21,9 +22,7 @@ public class CreateUserDto
     public string? Phone { get; set; }
 
     [Required]
-    [RegularExpression("^(Student|Instructor|Registrar|DeptAdmin|Finance|ITAdmin|Auditor)$",
-        ErrorMessage = "Role must be Student, Instructor, Registrar, DeptAdmin, Finance, ITAdmin, or Auditor")]
-    public string Role { get; set; } = null!;
+    public UserRole Role { get; set; }
 
     [Required]
     [MinLength(6)]

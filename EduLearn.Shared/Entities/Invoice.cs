@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -31,8 +32,7 @@ public class Invoice
     public DateTime DueDate { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Pending";
+    public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
 
     [MaxLength(500)]
     public string? InvoiceURI { get; set; }

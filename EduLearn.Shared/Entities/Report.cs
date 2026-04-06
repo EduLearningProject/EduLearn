@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -11,8 +12,7 @@ public class Report
     public int ReportID { get; set; }
 
     [Required]
-    [MaxLength(50)]
-    public string Scope { get; set; } = null!;
+    public ReportScope Scope { get; set; }
 
     public string? ParametersJSON { get; set; }
 

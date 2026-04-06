@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.Shared.Enums;
 
 namespace EduLearn.Shared.Entities;
 
@@ -22,8 +23,7 @@ public class Transcript
     public decimal? GPA { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Draft";
+    public TranscriptStatus Status { get; set; } = TranscriptStatus.Draft;
 
     [MaxLength(500)]
     public string? TranscriptURI { get; set; }
