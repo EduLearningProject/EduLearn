@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.API.Models.Enums;
 
 namespace EduLearn.API.Models;
 
@@ -31,8 +32,7 @@ public class Section
     public string? ScheduleJSON { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Open";
+    public SectionStatus Status { get; set; } = SectionStatus.Open;
 
     // Navigation properties
     [ForeignKey(nameof(CourseID))]
