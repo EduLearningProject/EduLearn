@@ -125,6 +125,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Section>(entity =>
         {
+            entity.Property(sec => sec.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasOne(sec => sec.Room)
                   .WithMany(r => r.Sections)
                   .HasForeignKey(sec => sec.RoomID)
@@ -139,6 +141,11 @@ public class AppDbContext : DbContext
                   .WithOne(a => a.Section)
                   .HasForeignKey(a => a.SectionID)
                   .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<Room>(entity =>
+        {
+            entity.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
         });
 
         modelBuilder.Entity<Enrollment>(entity =>
@@ -182,6 +189,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<EduLearn.API.Models.Program>(entity =>
         {
+            entity.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+
             entity.HasMany(p => p.Students)
                   .WithOne(s => s.Program)
                   .HasForeignKey(s => s.ProgramID)

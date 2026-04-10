@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.API.Models.Enums;
 
 namespace EduLearn.API.Models;
 
@@ -24,8 +25,7 @@ public class Room
     public string? ResourcesJSON { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Available";
+    public RoomStatus Status { get; set; } = RoomStatus.Available;
 
     // Navigation properties
     public ICollection<Section> Sections { get; set; } = new List<Section>();

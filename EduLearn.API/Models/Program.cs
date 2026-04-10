@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EduLearn.API.Models.Enums;
 
 namespace EduLearn.API.Models;
 
@@ -28,8 +29,7 @@ public class Program
     public int DurationTerms { get; set; } = 8;
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Active";
+    public ProgramStatus Status { get; set; } = ProgramStatus.Active;
 
     // Navigation properties
     public ICollection<Student> Students { get; set; } = new List<Student>();
